@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "551603627876",
+    "firebase_url": "https://swift-tow-flutter-default-rtdb.firebaseio.com",
+    "project_id": "swift-tow-flutter",
+    "storage_bucket": "swift-tow-flutter.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:551603627876:android:62987af72681dfccc17c71",
+        "android_client_info": {
+          "package_name": "com.example.swifttow"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "551603627876-rsvtotepjcbrhn6ovpcddo84htonig5e.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.swifttow",
+            "certificate_hash": "5a577c4a1d0acb3e0bb752bfea1c3fdec0c719b7"
+          }
+        },
+        {
+          "client_id": "551603627876-d290e5l12398ubtq5eus4kdclmcc161m.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBSZsl95SsLSxwmVmbGGJpbZ0M6wESUw6Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "551603627876-61javqaub7qde8qru3e8iuhdskbgu0q9.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "551603627876-nprl0m63gak3av7k9ho7qsdf246l7d2r.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.swifttow"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
