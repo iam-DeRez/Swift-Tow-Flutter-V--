@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:cool_alert/cool_alert.dart';
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
-
 import 'package:geolocator/geolocator.dart';
+
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:swifttow/modules/colors.dart';
 
@@ -30,43 +30,69 @@ class _MapsPage1State extends State<MapsPage1> {
   @override
   void initState() {
     // TODO: implement initState
-    locatePosition();
+    locatePosition(context);
     super.initState();
   }
 
   //function
-  void locatePosition() async {
+  Future locatePosition(BuildContext context, [bool mounted = true]) async {
+    showDialog(
+        // The user CANNOT close this dialog  by pressing outsite it
+        barrierDismissible: false,
+        context: context,
+        builder: (_) {
+          return Dialog(
+            // The background color
+            backgroundColor: Colors.white,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: const [
+                  // The loading indicator
+                  CircularProgressIndicator(),
+                  SizedBox(
+                    height: 15,
+                  ),
+                  // Some text
+                  Text('Loading...')
+                ],
+              ),
+            ),
+          );
+        });
+
+    await Geolocator.checkPermission();
+
     Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high);
+        desiredAccuracy: LocationAccuracy.best);
     currentPosition = position;
 
     LatLng latlngPosition = LatLng(position.latitude, position.longitude);
     CameraPosition cameraPosition =
         CameraPosition(target: latlngPosition, zoom: 17);
     setState(() {
-      mapController
-          ?.animateCamera(CameraUpdate.newCameraPosition(cameraPosition));
+      mapController!
+          .animateCamera(CameraUpdate.newCameraPosition(cameraPosition));
     });
 
-    setState(() async {
-      List<Placemark> placemarks =
-          await placemarkFromCoordinates(position.latitude, position.longitude);
-      String locality = placemarks[0].locality!;
-      String subThoroughfare = placemarks[1].administrativeArea!;
-      setState(() {
-        currentAddress = "$locality, $subThoroughfare";
-      });
+    List<Placemark> placemarks =
+        await placemarkFromCoordinates(position.latitude, position.longitude);
+    String locality = placemarks[0].locality!;
+    String subThoroughfare = placemarks[1].administrativeArea!;
+    setState(() {
+      currentAddress = "$locality, $subThoroughfare";
     });
+
+    if (!mounted) return;
+    Navigator.of(context).pop();
+
+    await Future.delayed(const Duration(seconds: 3));
   }
 
   // textcontroller
   late var actualLocation = TextEditingController();
   var dropOfflocation = TextEditingController();
-
-  CameraPosition startingPosition = const CameraPosition(
-    target: LatLng(5.614818, -0.205874),
-    zoom: 10,
-  );
 
   @override
   Widget build(BuildContext context) {
@@ -89,14 +115,16 @@ class _MapsPage1State extends State<MapsPage1> {
         GoogleMap(
           mapType: MapType.normal,
           myLocationEnabled: true,
+          myLocationButtonEnabled: true,
           zoomGesturesEnabled: true,
           zoomControlsEnabled: false,
-          initialCameraPosition: startingPosition,
+          initialCameraPosition: const CameraPosition(
+              target: LatLng(5.614818, -0.205874), zoom: 10),
           onMapCreated: (GoogleMapController controller) {
             _controller.complete(controller);
             mapController = controller;
 
-            locatePosition();
+            locatePosition(context);
           },
         ),
 
@@ -106,6 +134,7 @@ class _MapsPage1State extends State<MapsPage1> {
           minChildSize: 0.43,
           snap: true,
           snapSizes: const [0.43, 1],
+          snapAnimationDuration: const Duration(microseconds: 600),
           builder: (BuildContext context, ScrollController scrollController) =>
               SafeArea(
             child: Container(
@@ -177,12 +206,16 @@ class _MapsPage1State extends State<MapsPage1> {
                                 'images/location.png',
                                 scale: 3.5,
                               ),
-                              SizedBox(
+                              Container(
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: border),
+                                  borderRadius: BorderRadius.circular(4.0),
+                                ),
                                 width: MediaQuery.of(context).size.width * 0.84,
                                 child: TextField(
+                                  enabled: false,
                                   controller: TextEditingController(
                                       text: currentAddress),
-                                  keyboardType: TextInputType.streetAddress,
                                   style: const TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold),

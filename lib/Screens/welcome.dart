@@ -65,7 +65,7 @@ class WelcomePage extends StatelessWidget {
                 padding: const EdgeInsets.only(left: 30, right: 30),
                 child: ElevatedButton(
                   onPressed: () {
-                    Navigator.push(
+                    Navigator.pushReplacement(
                         context,
                         PageTransition(
                             type: PageTransitionType.rightToLeftJoined,
@@ -100,7 +100,7 @@ class WelcomePage extends StatelessWidget {
               //Create account button
               TextButton(
                   onPressed: () {
-                    Navigator.push(
+                    Navigator.pushReplacement(
                         context,
                         PageTransition(
                             type: PageTransitionType.rightToLeftJoined,

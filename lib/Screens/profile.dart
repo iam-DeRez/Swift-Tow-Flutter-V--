@@ -23,15 +23,11 @@ class ProfileState extends State<Profile> {
   final GoogleSignIn _googleSignIn = GoogleSignIn();
   final user = FirebaseAuth.instance.currentUser!;
 
-  Future<void> LogOut() async {
-    await _googleSignIn.signOut();
-    await FirebaseAuth.instance.signOut();
-    //user information
-  }
-
   //Logout function
   void logout() async {
     await _auth.signOut();
+    await _googleSignIn.signOut();
+    await FirebaseAuth.instance.signOut();
 
     AnimatedSnackBar.material('Logout successful',
             type: AnimatedSnackBarType.success,
@@ -262,7 +258,6 @@ class ProfileState extends State<Profile> {
                   child: TextButton.icon(
                       onPressed: () {
                         logout();
-                        LogOut();
                       },
                       style: TextButton.styleFrom(
                         alignment: Alignment.topLeft,
