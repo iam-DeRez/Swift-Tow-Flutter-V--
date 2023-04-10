@@ -87,7 +87,29 @@ class _MapsPage1State extends State<MapsPage1> {
     if (!mounted) return;
     Navigator.of(context).pop();
 
-    await Future.delayed(const Duration(seconds: 3));
+
+
+
+  
+
+//Place Autocomplete
+  void placesAutoCompletee(String query) async {
+    Uri uri = Uri.https(
+        "maps.googleapis.com",
+        "maps/api/place/autocomplete/json", //unencoded path
+        {"input": query, "key": placeKey});
+
+    //making GET request
+    String? response = await NetworkUtility.fetchUrl(uri);
+    if (response != null) {
+      PlaceAutoCompleteResponse result =
+          PlaceAutoCompleteResponse.parseAutocompleteResult(response);
+      if (result.predictions != null) {
+        setState(() {
+          placePrediction = result.predictions!;
+        });
+      }
+    }
   }
 
   // textcontroller
