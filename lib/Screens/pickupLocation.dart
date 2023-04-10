@@ -18,7 +18,7 @@ class PickupLocation extends StatefulWidget {
 class PickupLocationState extends State<PickupLocation> {
   List<AutocompletePrediction> placePrediction = [];
 
-//getting places prediction from maps
+//getting places prediction from mapsScreen
   void getPlaces(MapScreenState mapScreen) {
     placePrediction = mapScreen
         .placePrediction; // Assigning the list variable from ClassA to the listFromA variable in ClassB
@@ -28,6 +28,7 @@ class PickupLocationState extends State<PickupLocation> {
   final MapScreenState mapScreen = MapScreenState();
   String currentAddress = MapScreenState.currentAddress;
 
+//generating places using auto complete
   Future placesAutoCompletee(String query) async {
     Uri uri = Uri.https("maps.googleapis.com",
         "maps/api/place/autocomplete/json", {"input": query, "key": placeKey});

@@ -32,7 +32,7 @@ class MapScreenState extends State<MapScreen> {
   static String currentAddress = "";
   var geoLocator = Geolocator();
 
-  String query = '';
+//query for
 
   @override
   void initState() {
