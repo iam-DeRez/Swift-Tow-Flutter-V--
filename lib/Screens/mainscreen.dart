@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:ionicons/ionicons.dart';
 import 'package:page_transition/page_transition.dart';
+import 'package:swifttow/Screens/Maps.dart';
 import 'package:swifttow/Screens/mapspage.dart';
 import 'package:swifttow/Screens/mapspage.dart';
 import 'package:swifttow/Screens/notification.dart';
@@ -111,15 +112,8 @@ class _MainScreenState extends State<MainScreen> {
                           onPressed: () {
                             Navigator.pushReplacement(
                                 context,
-                                PageTransition(
-                                    type: PageTransitionType.rightToLeftJoined,
-                                    childCurrent: widget,
-                                    alignment: Alignment.bottomCenter,
-                                    curve: Curves.easeInOut,
-                                    duration: const Duration(milliseconds: 600),
-                                    reverseDuration:
-                                        const Duration(milliseconds: 600),
-                                    child: const MapsPage1()));
+                                MaterialPageRoute(
+                                    builder: (context) => const MapScreen()));
                           },
                           style: ButtonStyle(
                             elevation: MaterialStateProperty.all(0),

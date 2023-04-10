@@ -49,9 +49,13 @@ dependencies:
   google_maps_flutter: ^2.2.3
   google_sign_in: ^6.0.2
   page_transition: ^2.0.9
-  geolocator: ^9.0.2
+  geolocator: ^7.6.2
   http: ^0.13.5
+
   geocoding: ^2.1.0
+  flutter_svg: ^2.0.4
+  flutter_polyline_points: ^1.0.0
+  modal_bottom_sheet: ^2.1.2
  
 
   
