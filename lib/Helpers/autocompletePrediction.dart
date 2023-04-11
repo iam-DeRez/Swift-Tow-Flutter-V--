@@ -1,4 +1,4 @@
-class AutocompletePrediction {
+class AutocompletePredictions {
   // [description]
 
   final String? description;
@@ -13,7 +13,7 @@ class AutocompletePrediction {
 
   String? secondaryText = '';
 
-  AutocompletePrediction(
+  AutocompletePredictions(
       {this.description,
       this.placeId,
       this.reference,
@@ -21,8 +21,8 @@ class AutocompletePrediction {
       this.mainText,
       this.secondaryText});
 
-  factory AutocompletePrediction.fromJson(Map<String, dynamic> json) {
-    return AutocompletePrediction(
+  factory AutocompletePredictions.fromJson(Map<String, dynamic> json) {
+    return AutocompletePredictions(
       description: json['description'] as String?,
       placeId: json['place_id'] as String?,
       reference: json['reference'] as String?,

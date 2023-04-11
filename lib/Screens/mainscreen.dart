@@ -3,8 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:ionicons/ionicons.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:swifttow/Screens/Maps.dart';
-import 'package:swifttow/Screens/mapspage.dart';
-import 'package:swifttow/Screens/mapspage.dart';
+
 import 'package:swifttow/Screens/notification.dart';
 
 import '../modules/colors.dart';

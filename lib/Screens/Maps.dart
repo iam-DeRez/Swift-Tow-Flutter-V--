@@ -20,7 +20,7 @@ class MapScreen extends StatefulWidget {
 }
 
 class MapScreenState extends State<MapScreen> {
-  List<AutocompletePrediction> placePrediction = [];
+  List<AutocompletePredictions> placePrediction = [];
 
   //google maps controller
   final Completer<GoogleMapController> _controller =
@@ -30,55 +30,27 @@ class MapScreenState extends State<MapScreen> {
 
   Position? currentPosition;
   static String currentAddress = "";
-  var geoLocator = Geolocator();
-
-//query for
+  static LatLng? latlngPosition;
 
   @override
   void initState() {
     // TODO: implement initState
-    locatePosition(context);
+    locatePosition();
 
     super.initState();
   }
 
   //Current Location
-  Future locatePosition(BuildContext context, [bool mounted = true]) async {
-    showDialog(
-        // The user CANNOT close this dialog  by pressing outsite it
-        barrierDismissible: false,
-        context: context,
-        builder: (_) {
-          return Dialog(
-            // The background color
-            backgroundColor: Colors.white,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 20),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: const [
-                  // The loading indicator
-                  CircularProgressIndicator(),
-                  SizedBox(
-                    height: 15,
-                  ),
-                  // Some text
-                  Text('Loading...')
-                ],
-              ),
-            ),
-          );
-        });
-
+  Future locatePosition() async {
     await Geolocator.checkPermission();
 
     Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high);
     currentPosition = position;
 
-    LatLng latlngPosition = LatLng(position.latitude, position.longitude);
+    latlngPosition = LatLng(position.latitude, position.longitude);
     CameraPosition cameraPosition =
-        CameraPosition(target: latlngPosition, zoom: 17);
+        CameraPosition(target: latlngPosition!, zoom: 17);
 
     mapController!
         .animateCamera(CameraUpdate.newCameraPosition(cameraPosition));
@@ -90,12 +62,7 @@ class MapScreenState extends State<MapScreen> {
     setState(() {
       currentAddress = "$locality, $subThoroughfare";
     });
-
-    if (!mounted) return;
-    Navigator.of(context).pop();
   }
-
-//Place Autocomplete
 
   // textcontroller
   var actualLocation = TextEditingController();
@@ -129,7 +96,7 @@ class MapScreenState extends State<MapScreen> {
               _controller.complete(controller);
               mapController = controller;
 
-              locatePosition(context);
+              locatePosition();
             },
           ),
 

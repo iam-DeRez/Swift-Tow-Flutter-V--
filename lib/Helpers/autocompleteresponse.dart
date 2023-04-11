@@ -5,7 +5,7 @@ import 'package:swifttow/Helpers/autocompletePrediction.dart';
 
 class PlaceAutoCompleteResponse {
   final String? status;
-  final List<AutocompletePrediction>? predictions;
+  final List<AutocompletePredictions>? predictions;
 
   PlaceAutoCompleteResponse({this.status, this.predictions});
 
@@ -15,8 +15,8 @@ class PlaceAutoCompleteResponse {
       // ignore: prefer_null_aware_operators
       predictions: json["predictions"] != null
           ? json["predictions"]
-              .map<AutocompletePrediction>(
-                  (json) => AutocompletePrediction.fromJson(json))
+              .map<AutocompletePredictions>(
+                  (json) => AutocompletePredictions.fromJson(json))
               .toList()
           : null,
     );

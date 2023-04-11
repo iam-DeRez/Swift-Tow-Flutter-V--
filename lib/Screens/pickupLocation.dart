@@ -1,4 +1,8 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:google_place/google_place.dart';
 
 import '../Helpers/autocompletePrediction.dart';
 import '../Helpers/autocompleteresponse.dart';
@@ -7,6 +11,7 @@ import '../modules/apiKeys.dart';
 import '../modules/colors.dart';
 import '../modules/location list tile.dart';
 import 'Maps.dart';
+import 'dropOff_direction_Maps.dart';
 
 class PickupLocation extends StatefulWidget {
   const PickupLocation({super.key});
@@ -16,7 +21,14 @@ class PickupLocation extends StatefulWidget {
 }
 
 class PickupLocationState extends State<PickupLocation> {
-  List<AutocompletePrediction> placePrediction = [];
+  List<AutocompletePredictions> placePrediction = [];
+
+  @override
+  void initState() {
+    // TODO: implement initState
+
+    super.initState();
+  }
 
 //getting places prediction from mapsScreen
   void getPlaces(MapScreenState mapScreen) {
@@ -28,7 +40,9 @@ class PickupLocationState extends State<PickupLocation> {
   final MapScreenState mapScreen = MapScreenState();
   String currentAddress = MapScreenState.currentAddress;
 
-//generating places using auto complete
+  static LatLng? dropOffLocation;
+
+//long and lat for selected places using auto complete
   Future placesAutoCompletee(String query) async {
     Uri uri = Uri.https("maps.googleapis.com",
         "maps/api/place/autocomplete/json", {"input": query, "key": placeKey});
@@ -43,6 +57,34 @@ class PickupLocationState extends State<PickupLocation> {
         placePrediction = result.predictions!;
       });
     }
+    print("Drop Off Location top: $dropOffLocation");
+  }
+
+  Future<LatLng> fetchPlaceDetails(
+    String placeId,
+  ) async {
+    final apiKey = placeKey; // Replace with your own API key
+    final url =
+        'https://maps.googleapis.com/maps/api/place/details/json?place_id=$placeId&key=$apiKey';
+
+    final response = await http.get(Uri.parse(url));
+
+    if (response.statusCode == 200) {
+      // Parse the JSON response
+      final json = jsonDecode(response.body);
+      final result = json['result'];
+
+      // Extract the latitude and longitude from the result
+      double dropOfflatitude = result['geometry']['location']['lat'];
+      double drop0fflongitude = result['geometry']['location']['lng'];
+      LatLng dropOffLatlng = LatLng(dropOfflatitude, drop0fflongitude);
+
+      dropOffLocation = dropOffLatlng;
+    } else {
+      print(
+          'Failed to fetch place details. Status code: ${response.statusCode}');
+    }
+    return dropOffLocation!;
   }
 
   @override
@@ -156,6 +198,7 @@ class PickupLocationState extends State<PickupLocation> {
                             placesAutoCompletee(value);
                           },
                           controller: dropOfflocation,
+                          autofocus: true,
                           keyboardType: TextInputType.streetAddress,
                           style: const TextStyle(fontSize: 15),
                           decoration: InputDecoration(
@@ -201,7 +244,14 @@ class PickupLocationState extends State<PickupLocation> {
                 return LocationListTile(
                     location: placePrediction[index].mainText!,
                     secondary: placePrediction[index].secondaryText!,
-                    press: () {});
+                    press: () async {
+                      String placeId = placePrediction[index].placeId!;
+                      await fetchPlaceDetails(placeId);
+                      Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => DirectionsMap()));
+                    });
               },
             ),
           ))

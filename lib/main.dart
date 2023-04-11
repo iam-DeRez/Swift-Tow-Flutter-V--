@@ -2,7 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:swifttow/Screens/home.dart';
-import 'package:swifttow/Screens/mapspage.dart';
+
 import 'package:swifttow/Screens/welcome.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -24,7 +24,6 @@ class _MyAppState extends State<MyApp> {
 
   @override
   void initState() {
-    const MapsPage1();
     super.initState();
     user = FirebaseAuth.instance.currentUser;
   }
