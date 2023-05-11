@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:animated_snack_bar/animated_snack_bar.dart';
 import 'package:cool_alert/cool_alert.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:page_transition/page_transition.dart';
@@ -38,6 +39,14 @@ class _LoginState extends State<Login> {
           email: emailController.text,
           password: passwordController.text,
         );
+
+        //instantiate database
+        DatabaseReference userRef =
+            FirebaseDatabase.instance.ref().child('users');
+        final user = FirebaseAuth.instance.currentUser!;
+        String uid = user.uid;
+        DatabaseEvent event = await userRef.child("users/$uid/Name").once();
+
         await CoolAlert.show(
             context: context,
             type: CoolAlertType.loading,
@@ -76,7 +85,6 @@ class _LoginState extends State<Login> {
 //google signin
   Future<void> googleSignIn() async {
     try {
-      GoogleSignIn _googleSignIn = GoogleSignIn();
       final GoogleSignInAccount? googleSignInAccount =
           await GoogleSignIn().signIn();
 
@@ -388,6 +396,7 @@ class _LoginState extends State<Login> {
                     ],
                   ),
                 ),
+
                 const SizedBox(
                   height: 75,
                 ),

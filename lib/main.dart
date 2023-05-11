@@ -37,6 +37,6 @@ class _MyAppState extends State<MyApp> {
           colorSchemeSeed: const Color(0xff445DB5),
           textTheme: GoogleFonts.dmSansTextTheme(Theme.of(context).textTheme),
         ),
-        home: user == null ? const WelcomePage() : const Home());
+        home: user != null ? const Home() : const WelcomePage());
   }
 }

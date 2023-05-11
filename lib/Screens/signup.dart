@@ -1,11 +1,16 @@
+import 'dart:math';
+
 import 'package:animated_snack_bar/animated_snack_bar.dart';
 import 'package:cool_alert/cool_alert.dart';
 import 'package:email_validator/email_validator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:swifttow/Screens/home.dart';
 import 'package:swifttow/modules/colors.dart';
+import 'package:swifttow/modules/social%20links%20header.dart';
 import '../modules/to login page.dart';
 import 'profile.dart';
 
@@ -13,10 +18,10 @@ class SignUp extends StatefulWidget {
   const SignUp({super.key});
 
   @override
-  State<SignUp> createState() => _SignUpState();
+  State<SignUp> createState() => SignUpState();
 }
 
-class _SignUpState extends State<SignUp> {
+class SignUpState extends State<SignUp> {
   bool _isObscure = true;
 
   final formsfield = GlobalKey<FormState>();
@@ -26,29 +31,38 @@ class _SignUpState extends State<SignUp> {
 
   //Controllers
   var emailController = TextEditingController();
+  var nameController = TextEditingController();
   var phoneController = TextEditingController();
   var passwordController = TextEditingController();
 
-//function for Registering User
+//function for Registering Users using Email and Password
   void registerUser() async {
     if (formsfield.currentState!.validate()) {
       // take action what you want
       try {
-        await _auth.createUserWithEmailAndPassword(
+        UserCredential userCredential =
+            await _auth.createUserWithEmailAndPassword(
           email: emailController.text,
           password: passwordController.text,
         );
+
+        //instantiate database
+        DatabaseReference newUserRef =
+            FirebaseDatabase.instance.ref().child('users');
+
+        String uid = userCredential.user!.uid;
+
+//push user details to database
+        await newUserRef.child(uid).set({
+          'Email': emailController.text,
+          'Name': nameController.text,
+          'Phone': phoneController.text,
+        });
+
         await CoolAlert.show(
             context: context,
             type: CoolAlertType.loading,
             autoCloseDuration: const Duration(seconds: 2));
-
-        AnimatedSnackBar.material('Login successful',
-                type: AnimatedSnackBarType.success,
-                duration: const Duration(seconds: 2),
-                mobileSnackBarPosition: MobileSnackBarPosition.bottom,
-                desktopSnackBarPosition: DesktopSnackBarPosition.bottomLeft)
-            .show(context);
 
         //when successful
         Navigator.pushReplacement(
@@ -63,6 +77,13 @@ class _SignUpState extends State<SignUp> {
             child: const Home(),
           ),
         );
+
+        AnimatedSnackBar.material('Signup successful',
+                type: AnimatedSnackBarType.success,
+                duration: const Duration(seconds: 2),
+                mobileSnackBarPosition: MobileSnackBarPosition.bottom,
+                desktopSnackBarPosition: DesktopSnackBarPosition.bottomLeft)
+            .show(context);
       } on FirebaseAuthException catch (e) {
         String error = e.code.toString();
 
@@ -72,6 +93,60 @@ class _SignUpState extends State<SignUp> {
                 desktopSnackBarPosition: DesktopSnackBarPosition.bottomLeft)
             .show(context);
       }
+    }
+  }
+
+//function for registering users using socials
+  Future<void> googleSignUp() async {
+    try {
+      final GoogleSignInAccount? googleSignInAccount =
+          await GoogleSignIn().signIn();
+
+      if (googleSignInAccount != null) {
+        final GoogleSignInAuthentication googleSignInAuthentication =
+            await googleSignInAccount.authentication;
+        final AuthCredential authCredential = GoogleAuthProvider.credential(
+          idToken: googleSignInAuthentication.idToken,
+          accessToken: googleSignInAuthentication.accessToken,
+        );
+        UserCredential userCredential =
+            await _auth.signInWithCredential(authCredential);
+        User? user = userCredential.user;
+
+        await CoolAlert.show(
+            context: context,
+            type: CoolAlertType.loading,
+            autoCloseDuration: const Duration(seconds: 2));
+      } else {
+        throw Exception(e);
+      }
+
+      AnimatedSnackBar.material('Login successful',
+              type: AnimatedSnackBarType.success,
+              duration: const Duration(seconds: 2),
+              mobileSnackBarPosition: MobileSnackBarPosition.bottom,
+              desktopSnackBarPosition: DesktopSnackBarPosition.bottomLeft)
+          .show(context);
+
+      //when successful
+      Navigator.pushReplacement(
+          context,
+          PageTransition(
+              type: PageTransitionType.rightToLeftJoined,
+              childCurrent: widget,
+              alignment: Alignment.bottomCenter,
+              curve: Curves.easeInOut,
+              duration: const Duration(milliseconds: 600),
+              reverseDuration: const Duration(milliseconds: 600),
+              child: const Home()));
+    } catch (e) {
+      String error = "Not logged In";
+
+      AnimatedSnackBar.material(error,
+              type: AnimatedSnackBarType.error,
+              mobileSnackBarPosition: MobileSnackBarPosition.bottom,
+              desktopSnackBarPosition: DesktopSnackBarPosition.bottomLeft)
+          .show(context);
     }
   }
 
@@ -106,7 +181,7 @@ class _SignUpState extends State<SignUp> {
                 ),
 
                 const SizedBox(
-                  height: 45,
+                  height: 35,
                 ),
 
                 // Email Textfield
@@ -169,7 +244,66 @@ class _SignUpState extends State<SignUp> {
                 ),
 
                 const SizedBox(
-                  height: 40,
+                  height: 35,
+                ),
+
+                //Name Textfield
+                const Text(
+                  "Name",
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold, letterSpacing: 0.5),
+                ),
+
+                const SizedBox(
+                  height: 10,
+                ),
+
+                TextFormField(
+                  controller: nameController,
+                  style: const TextStyle(fontSize: 16),
+                  decoration: InputDecoration(
+                    focusedErrorBorder: const OutlineInputBorder(
+                        borderSide: BorderSide(
+                      color: Color.fromARGB(255, 179, 54, 54),
+                    )),
+                    errorBorder: const OutlineInputBorder(
+                        borderSide: BorderSide(
+                      color: Color.fromARGB(255, 204, 61, 61),
+                    )),
+                    enabledBorder: const OutlineInputBorder(
+                      borderSide: BorderSide(
+                        color: border,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: const BorderSide(
+                        color: primary,
+                      ),
+                      borderRadius: BorderRadius.circular(4.0),
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(4.0),
+                      borderSide: BorderSide.none,
+                    ),
+                    hintText: 'Eg. Batman Awuni',
+                    hintStyle: const TextStyle(fontSize: 14),
+                    contentPadding: const EdgeInsets.symmetric(
+                        vertical: 15.0, horizontal: 12.0),
+                  ),
+
+                  //validating Email
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
+                  validator: (value) {
+                    if (value!.isEmpty) {
+                      return 'Enter Name';
+                    }
+
+                    return null;
+                  },
+                ),
+
+                const SizedBox(
+                  height: 35,
                 ),
 
                 //Phone Textfield
@@ -231,7 +365,7 @@ class _SignUpState extends State<SignUp> {
                 ),
 
                 const SizedBox(
-                  height: 40,
+                  height: 35,
                 ),
 
                 // Password Textfield
@@ -303,7 +437,7 @@ class _SignUpState extends State<SignUp> {
                 ),
 
                 const SizedBox(
-                  height: 65,
+                  height: 55,
                 ),
 
                 //Login button
@@ -322,6 +456,53 @@ class _SignUpState extends State<SignUp> {
                   child: const Text(
                     "Create account",
                     style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                  ),
+                ),
+
+                const SizedBox(
+                  height: 45,
+                ),
+                const SocialLinksHeader(),
+
+                const SizedBox(
+                  height: 45,
+                ),
+                //social Sign up
+                Container(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      SizedBox(
+                        height: 50,
+                        width: 175,
+                        child: OutlinedButton.icon(
+                          onPressed: () {
+                            googleSignUp();
+                          },
+                          icon: Image.asset(
+                            "images/googleicon.png",
+                            scale: 2.1,
+                          ),
+                          style:
+                              OutlinedButton.styleFrom(foregroundColor: text),
+                          label: const Text("Google"),
+                        ),
+                      ),
+                      SizedBox(
+                        height: 50,
+                        width: 175,
+                        child: OutlinedButton.icon(
+                          onPressed: () {},
+                          icon: Image.asset(
+                            "images/facebookicon.png",
+                            scale: 2.1,
+                          ),
+                          style:
+                              OutlinedButton.styleFrom(foregroundColor: text),
+                          label: const Text("Facebook"),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
 

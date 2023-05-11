@@ -1,10 +1,12 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:ionicons/ionicons.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:swifttow/Screens/Maps.dart';
 
 import 'package:swifttow/Screens/notification.dart';
+import 'package:swifttow/Screens/signup.dart';
 
 import '../modules/colors.dart';
 import 'navDrawer.dart';
@@ -26,12 +28,37 @@ class _MainScreenState extends State<MainScreen> {
   //user information
   final user = FirebaseAuth.instance.currentUser!;
 
+  //Firebase Realtime Database reference
+  final userRef = FirebaseDatabase.instance.ref();
+  late DatabaseReference databasereference;
+  String emailUSername = '';
+
+  showUserData() async {
+    String uid = user.uid;
+
+    DatabaseEvent event = await userRef.child("users/$uid/Name").once();
+    String name = event.snapshot.value.toString();
+
+    setState(() {
+      emailUSername = name;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  //Retrieving user's name (Email Sign In)
+
   @override
   Widget build(BuildContext context) {
-    String username = user.displayName!.split(" ")[0];
-    if (user.displayName == null) {
-      username == "";
-    }
+    //User's name
+    showUserData();
+
+    String username = user.displayName != null
+        ? user.displayName!.split(" ")[0]
+        : emailUSername;
 
     return Scaffold(
       //topbar

@@ -9,3 +9,5 @@ const Color nav = Color(0xffEEF1FB);
 const Color background = Color(0xffF2F2F2);
 const Color danger = Color(0xffFF5555);
 const Color loading = Color.fromARGB(255, 190, 190, 190);
+const Color alertBg = Color(0xffE1F6EA);
+const Color alertBorder = Color(0xff89C8A9);

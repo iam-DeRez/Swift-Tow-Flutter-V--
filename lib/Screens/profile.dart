@@ -1,10 +1,12 @@
 import 'package:animated_snack_bar/animated_snack_bar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:ionicons/ionicons.dart';
 import 'package:swifttow/Screens/login.dart';
+import 'package:swifttow/Screens/signup.dart';
 import 'package:swifttow/modules/colors.dart';
 
 import 'navDrawer.dart';
@@ -22,6 +24,23 @@ class ProfileState extends State<Profile> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
   final user = FirebaseAuth.instance.currentUser!;
+  final SignUpState signup = SignUpState();
+
+  //Firebase Realtime Database reference
+  final userRef = FirebaseDatabase.instance.ref();
+  late DatabaseReference databasereference;
+  String emailUSername = '';
+
+  showUserData() async {
+    String uid = user.uid;
+
+    DatabaseEvent event = await userRef.child("users/$uid/Name").once();
+    String name = event.snapshot.value.toString();
+
+    setState(() {
+      emailUSername = name;
+    });
+  }
 
   //Logout function
   void logout() async {
@@ -44,8 +63,11 @@ class ProfileState extends State<Profile> {
 
   @override
   Widget build(BuildContext context) {
+    showUserData();
+
     String photoUrl = user.photoURL.toString();
-    String username = user.displayName!;
+    String username =
+        user.displayName != null ? user.displayName! : emailUSername;
     return Scaffold(
       backgroundColor: background,
       appBar: AppBar(

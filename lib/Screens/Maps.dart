@@ -100,6 +100,7 @@ class MapScreenState extends State<MapScreen> {
             },
           ),
 
+//bottomsheet
           Positioned(
               left: 0,
               bottom: 0,
@@ -119,8 +120,6 @@ class MapScreenState extends State<MapScreen> {
                       )
                     ]),
                 height: MediaQuery.of(context).size.height * 0.3,
-
-                //puller
                 child: Column(
                   children: [
                     Padding(
