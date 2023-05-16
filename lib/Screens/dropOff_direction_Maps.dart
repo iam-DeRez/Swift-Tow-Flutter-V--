@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:geolocator/geolocator.dart';
@@ -22,7 +23,8 @@ class DirectionsMap extends StatefulWidget {
   //google maps controller
 }
 
-class _DirectionsMapState extends State<DirectionsMap> {
+class _DirectionsMapState extends State<DirectionsMap>
+    with TickerProviderStateMixin {
   @override
   void initState() {
     // TODO: implement initState
@@ -49,6 +51,14 @@ class _DirectionsMapState extends State<DirectionsMap> {
   }
 
   double mapBottomPadding = 0;
+  bool visibility = true;
+
+  //FairBottomSheet
+  void hideFairBottomSheet() async {
+    setState(() {
+      visibility = false;
+    });
+  }
 
   //dropOff location
   LatLng currentPosition = MapScreenState.latlngPosition!;
@@ -62,6 +72,8 @@ class _DirectionsMapState extends State<DirectionsMap> {
 
   @override
   Widget build(BuildContext context) {
+//method for displaying fairDisplay
+
     //Current Location and DropOffLocation markers
     Set<Marker> markers = {
       //currentLocation marker
@@ -123,192 +135,211 @@ class _DirectionsMapState extends State<DirectionsMap> {
           ),
 
           //bottomsheet
+
+          //bottomsheet
           Positioned(
               left: 0,
               bottom: 0,
               right: 0,
-              child: Container(
-                decoration: const BoxDecoration(
-                    borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(25.5),
-                        topRight: Radius.circular(25.5)),
-                    color: Colors.white,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Color.fromARGB(66, 88, 88, 88),
-                        blurRadius: 25.0,
-                        spreadRadius: 0.5,
-                        offset: Offset(0.7, 0.7),
-                      )
-                    ]),
-                height: MediaQuery.of(context).size.height * 0.5,
-                child: Column(
-                  children: [
-                    Padding(
-                      padding:
-                          const EdgeInsets.only(left: 175, right: 175, top: 10),
-                      child: Container(
-                        height: 6,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(20),
-                          color: const Color.fromARGB(255, 197, 197, 197),
+              child: Visibility(
+                visible: visibility,
+                child: Container(
+                  decoration: const BoxDecoration(
+                      borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(25.5),
+                          topRight: Radius.circular(25.5)),
+                      color: Colors.white,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Color.fromARGB(66, 88, 88, 88),
+                          blurRadius: 25.0,
+                          spreadRadius: 0.5,
+                          offset: Offset(0.7, 0.7),
+                        )
+                      ]),
+                  height: MediaQuery.of(context).size.height * 0.5,
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(
+                            left: 175, right: 175, top: 10),
+                        child: Container(
+                          height: 6,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(20),
+                            color: const Color.fromARGB(255, 197, 197, 197),
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(
-                      height: 24,
+                      const SizedBox(
+                        height: 24,
 
-                      //Container for bottomsheet
-                    ),
-                    Container(
-                        width: MediaQuery.of(context).size.width,
-                        padding: const EdgeInsets.only(
-                          left: 24,
-                          right: 24,
-                        ),
+                        //Container for bottomsheet
+                      ),
+                      Container(
+                          width: MediaQuery.of(context).size.width,
+                          padding: const EdgeInsets.only(
+                            left: 24,
+                            right: 24,
+                          ),
 
-                        //Column layout
-                        child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              //Heading
-                              const Text(
-                                "Normal Towing",
-                                style: TextStyle(
-                                    fontSize: 18,
-                                    color: text,
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: 1),
-                              ),
-
-                              const SizedBox(height: 18),
-
-                              //Alert
-                              Container(
-                                decoration: BoxDecoration(
-                                  border:
-                                      Border.all(width: 1, color: alertBorder),
-                                  color: alertBg,
-                                  borderRadius: const BorderRadius.all(
-                                      Radius.circular(10)),
+                          //Column layout
+                          child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                //Heading
+                                const Text(
+                                  "Normal Towing",
+                                  style: TextStyle(
+                                      fontSize: 18,
+                                      color: text,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 1),
                                 ),
-                                padding: const EdgeInsets.all(13),
-                                child: Row(children: [
-                                  SvgPicture.asset(
-                                    "images/alert-circle.svg",
-                                    height: 35,
+
+                                const SizedBox(height: 18),
+
+                                //Alert
+                                Container(
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                        width: 1, color: alertBorder),
+                                    color: alertBg,
+                                    borderRadius: const BorderRadius.all(
+                                        Radius.circular(10)),
                                   ),
-                                  const SizedBox(width: 15),
-                                  const Flexible(
-                                    child: Text(
-                                      "Please hold on tight trucks are available. T for thanks",
-                                      maxLines: 3,
+                                  padding: const EdgeInsets.all(13),
+                                  child: Row(children: [
+                                    SvgPicture.asset(
+                                      "images/alert-circle.svg",
+                                      height: 35,
                                     ),
-                                  )
-                                ]),
-                              ),
-
-                              const SizedBox(height: 24),
-
-                              //Towing Fare
-                              Container(
-                                child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: const [
-                                      Text("Towing fee",
-                                          style: TextStyle(color: subtext)),
-                                      Text("GHs 200",
-                                          style: TextStyle(color: subtext)),
-                                    ]),
-                              ),
-
-                              const SizedBox(height: 14),
-
-                              //Distance Fare
-                              Container(
-                                child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: const [
-                                      Text(
-                                        "Distance fee",
-                                        style: TextStyle(color: subtext),
+                                    const SizedBox(width: 15),
+                                    const Flexible(
+                                      child: Text(
+                                        "Please hold on tight trucks are available. T for thanks",
+                                        maxLines: 3,
                                       ),
-                                      Text("GHs 30",
-                                          style: TextStyle(color: subtext)),
-                                    ]),
-                              ),
+                                    )
+                                  ]),
+                                ),
 
-                              const SizedBox(height: 24),
-                              const Divider(
-                                height: 1,
-                                color: text,
-                              ),
+                                const SizedBox(height: 24),
 
-                              const SizedBox(height: 12),
-                              //Total fare
-                              Container(
-                                child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: const [
-                                      Text(
-                                        "Total",
-                                        style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold),
-                                      ),
-                                      Text("GHs 230",
+                                //Towing Fare
+                                Container(
+                                  child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: const [
+                                        Text("Towing fee",
+                                            style: TextStyle(color: subtext)),
+                                        Text("GHs 200",
+                                            style: TextStyle(color: subtext)),
+                                      ]),
+                                ),
+
+                                const SizedBox(height: 14),
+
+                                //Distance Fare
+                                Container(
+                                  child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: const [
+                                        Text(
+                                          "Distance fee",
+                                          style: TextStyle(color: subtext),
+                                        ),
+                                        Text("GHs 30",
+                                            style: TextStyle(color: subtext)),
+                                      ]),
+                                ),
+
+                                const SizedBox(height: 24),
+                                const Divider(
+                                  height: 1,
+                                  color: text,
+                                ),
+
+                                const SizedBox(height: 12),
+                                //Total fare
+                                Container(
+                                  child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: const [
+                                        Text(
+                                          "Total",
                                           style: TextStyle(
                                               fontSize: 16,
-                                              fontWeight: FontWeight.bold)),
-                                    ]),
-                              ),
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                        Text("GHs 230",
+                                            style: TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold)),
+                                      ]),
+                                ),
 
-                              const SizedBox(height: 42),
+                                const SizedBox(height: 42),
 
-                              //button
-                              Container(
-                                  child: Column(children: [
-                                ElevatedButton(
-                                  onPressed: () {
-                                    Navigator.pushReplacement(
-                                        context,
-                                        MaterialPageRoute(
-                                            builder: (context) =>
-                                                const MapScreen()));
-                                  },
-                                  style: ButtonStyle(
-                                    elevation: MaterialStateProperty.all(0),
-                                    shadowColor: MaterialStateProperty.all(
-                                        Colors.transparent),
-                                    backgroundColor:
-                                        MaterialStateProperty.all(primary),
-                                    minimumSize: MaterialStateProperty.all(
-                                        const Size(double.infinity, 55)),
-                                    shape: MaterialStateProperty.all(
-                                      RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(30),
+                                //button
+                                Container(
+                                    child: Column(children: [
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      hideFairBottomSheet();
+                                      showModalBottomSheet(
+                                          backgroundColor: Colors.transparent,
+                                          context: context,
+                                          builder: (BuildContext context) {
+                                            return const ShowPayment();
+                                          });
+                                      // Navigator.pushReplacement(
+                                      //     context,
+                                      //     MaterialPageRoute(
+                                      //         builder: (context) =>
+                                      //             const MapScreen()));
+                                    },
+                                    style: ButtonStyle(
+                                      elevation: MaterialStateProperty.all(0),
+                                      shadowColor: MaterialStateProperty.all(
+                                          Colors.transparent),
+                                      backgroundColor:
+                                          MaterialStateProperty.all(primary),
+                                      minimumSize: MaterialStateProperty.all(
+                                          const Size(double.infinity, 55)),
+                                      shape: MaterialStateProperty.all(
+                                        RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(30),
+                                        ),
+                                      ),
+                                    ),
+                                    child: const Padding(
+                                      padding: EdgeInsets.all(8.0),
+                                      child: Text(
+                                        "Continue",
+                                        style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.bold,
+                                            letterSpacing: 0.5,
+                                            color: Colors.white),
                                       ),
                                     ),
                                   ),
-                                  child: const Padding(
-                                    padding: EdgeInsets.all(8.0),
-                                    child: Text(
-                                      "Continue",
-                                      style: TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.bold,
-                                          letterSpacing: 0.5,
-                                          color: Colors.white),
-                                    ),
-                                  ),
-                                ),
+                                ])),
                               ])),
-                            ])),
-                  ],
-                ),
+                    ],
+                  ),
+                )
+                    .animate()
+                    .fade(duration: const Duration(milliseconds: 600))
+                    .slide(
+                        begin: const Offset(0, 100),
+                        duration: const Duration(milliseconds: 1000),
+                        curve: Curves.fastLinearToSlowEaseIn),
               )),
         ]));
   }
@@ -335,5 +366,166 @@ class _DirectionsMapState extends State<DirectionsMap> {
             points: polylineCoordinates));
       });
     }
+  }
+}
+
+class ShowPayment extends StatefulWidget {
+  const ShowPayment({super.key});
+
+  @override
+  State<ShowPayment> createState() => _ShowPaymentState();
+}
+
+class _ShowPaymentState extends State<ShowPayment> {
+  //Custom Radio Buttons
+  String _selectedPayment = '';
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+          borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(25.5), topRight: Radius.circular(25.5)),
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Color.fromARGB(66, 88, 88, 88),
+              blurRadius: 25.0,
+              spreadRadius: 0.5,
+              offset: Offset(0.7, 0.7),
+            )
+          ]),
+      height: MediaQuery.of(context).size.height * 0.4,
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(left: 175, right: 175, top: 10),
+            child: Container(
+              height: 6,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                color: const Color.fromARGB(255, 197, 197, 197),
+              ),
+            ),
+          ),
+          const SizedBox(
+            height: 24,
+
+            //Container for bottomsheet
+          ),
+          Container(
+              width: MediaQuery.of(context).size.width,
+              padding: const EdgeInsets.only(
+                left: 24,
+                right: 24,
+              ),
+
+              //Column layout
+              child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    //Heading
+                    const Text(
+                      "Payment Method",
+                      style: TextStyle(
+                          fontSize: 18,
+                          color: text,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1),
+                    ),
+
+                    const SizedBox(height: 18),
+
+                    RadioListTile(
+                      title: Row(
+                        children: [
+                          Image.asset('images/cash.png',
+                              width: 24,
+                              height: 24), // Replace with your image path
+                          const SizedBox(width: 16),
+                          const Text('Cash'),
+                        ],
+                      ),
+                      value: 'cash',
+                      groupValue: _selectedPayment,
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedPayment = value.toString();
+                        });
+                      },
+                      activeColor: Colors.blue,
+                      selected: _selectedPayment == 'cash',
+                      controlAffinity: ListTileControlAffinity.trailing,
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    RadioListTile(
+                      title: Row(
+                        children: [
+                          Image.asset('images/debit.png',
+                              width: 24,
+                              height: 24), // Replace with your image path
+                          const SizedBox(width: 16),
+                          const Text('Debit Card'),
+                        ],
+                      ),
+                      value: 'debit',
+                      groupValue: _selectedPayment,
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedPayment = value.toString();
+                        });
+                      },
+                      activeColor: Colors.blue,
+                      selected: _selectedPayment == 'debit',
+                      controlAffinity: ListTileControlAffinity.trailing,
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    //button
+                    Container(
+                        child: Column(children: [
+                      ElevatedButton(
+                        onPressed: () {
+                          // Navigator.pushReplacement(
+                          //     context,
+                          //     MaterialPageRoute(
+                          //         builder: (context) =>
+                          //             const MapScreen()));
+                        },
+                        style: ButtonStyle(
+                          elevation: MaterialStateProperty.all(0),
+                          shadowColor:
+                              MaterialStateProperty.all(Colors.transparent),
+                          backgroundColor: MaterialStateProperty.all(primary),
+                          minimumSize: MaterialStateProperty.all(
+                              const Size(double.infinity, 55)),
+                          shape: MaterialStateProperty.all(
+                            RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                          ),
+                        ),
+                        child: const Padding(
+                          padding: EdgeInsets.all(8.0),
+                          child: Text(
+                            "Continue",
+                            style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 0.5,
+                                color: Colors.white),
+                          ),
+                        ),
+                      ),
+                    ])),
+                  ])),
+        ],
+      ),
+    ).animate().fade(duration: const Duration(milliseconds: 600)).slide(
+        begin: const Offset(0, 100),
+        duration: const Duration(milliseconds: 1000),
+        curve: Curves.fastLinearToSlowEaseIn);
   }
 }

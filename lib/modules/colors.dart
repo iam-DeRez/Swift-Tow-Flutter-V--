@@ -11,3 +11,4 @@ const Color danger = Color(0xffFF5555);
 const Color loading = Color.fromARGB(255, 190, 190, 190);
 const Color alertBg = Color(0xffE1F6EA);
 const Color alertBorder = Color(0xff89C8A9);
+const Color paymentBg = Color(0xffF6F6F6);

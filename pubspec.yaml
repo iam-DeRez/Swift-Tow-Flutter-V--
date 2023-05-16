@@ -54,6 +54,7 @@ dependencies:
   maps_places_autocomplete: ^0.0.2
   google_place: ^0.4.7
   loading_animation_widget: ^1.2.0+4
+  flutter_animate: ^4.1.1+1
   
  
 
