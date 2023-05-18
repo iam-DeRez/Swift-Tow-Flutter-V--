@@ -57,7 +57,6 @@ class PickupLocationState extends State<PickupLocation> {
         placePrediction = result.predictions!;
       });
     }
-    print("Drop Off Location top: $dropOffLocation");
   }
 
   Future<LatLng> fetchPlaceDetails(

@@ -12,3 +12,7 @@ const Color loading = Color.fromARGB(255, 190, 190, 190);
 const Color alertBg = Color(0xffE1F6EA);
 const Color alertBorder = Color(0xff89C8A9);
 const Color paymentBg = Color(0xffF6F6F6);
+const Color loading2 = Color(0xffBEBEBE);
+const Color danger2 = Color(0xffF45959);
+const Color alert2bg = Color(0xffD8E4F3);
+const Color alert2border = Color(0xff7CA4D5);
