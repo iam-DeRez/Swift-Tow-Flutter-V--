@@ -51,6 +51,7 @@ class SignUpState extends State<SignUp> {
             FirebaseDatabase.instance.ref().child('users');
 
         String uid = userCredential.user!.uid;
+        // Retrieve user data
 
 //push user details to database
         await newUserRef.child(uid).set({
@@ -113,37 +114,59 @@ class SignUpState extends State<SignUp> {
             await _auth.signInWithCredential(authCredential);
         User? user = userCredential.user;
 
-        await CoolAlert.show(
+        if (user != null) {
+          // Instantiate database reference
+          DatabaseReference newUserRef =
+              FirebaseDatabase.instance.reference().child('users');
+
+          String uid = user.uid;
+          String name = user.displayName ?? '';
+          String email = user.email ?? '';
+          String phoneNumber = user.phoneNumber ?? '';
+
+          // Push user details to the database
+          await newUserRef.child(uid).set({
+            'Email': email,
+            'Name': name,
+            'Phone': phoneNumber,
+          });
+
+          await CoolAlert.show(
             context: context,
             type: CoolAlertType.loading,
-            autoCloseDuration: const Duration(seconds: 2));
+            autoCloseDuration: const Duration(seconds: 2),
+          );
+
+          //when successful
+          Navigator.pushReplacement(
+              context,
+              PageTransition(
+                  type: PageTransitionType.rightToLeftJoined,
+                  childCurrent: widget,
+                  alignment: Alignment.bottomCenter,
+                  curve: Curves.easeInOut,
+                  duration: const Duration(milliseconds: 600),
+                  reverseDuration: const Duration(milliseconds: 600),
+                  child: const Home()));
+        } else {
+          throw Exception('User is null');
+        }
       } else {
-        throw Exception(e);
+        throw Exception('Google sign-in account is null');
       }
+    } catch (e) {
+      String error = 'Error signing in with Google: $e';
+
+      AnimatedSnackBar.material(error,
+              type: AnimatedSnackBarType.error,
+              mobileSnackBarPosition: MobileSnackBarPosition.bottom,
+              desktopSnackBarPosition: DesktopSnackBarPosition.bottomLeft)
+          .show(context);
+      // Handle the error as per your requirement
 
       AnimatedSnackBar.material('Login successful',
               type: AnimatedSnackBarType.success,
               duration: const Duration(seconds: 2),
-              mobileSnackBarPosition: MobileSnackBarPosition.bottom,
-              desktopSnackBarPosition: DesktopSnackBarPosition.bottomLeft)
-          .show(context);
-
-      //when successful
-      Navigator.pushReplacement(
-          context,
-          PageTransition(
-              type: PageTransitionType.rightToLeftJoined,
-              childCurrent: widget,
-              alignment: Alignment.bottomCenter,
-              curve: Curves.easeInOut,
-              duration: const Duration(milliseconds: 600),
-              reverseDuration: const Duration(milliseconds: 600),
-              child: const Home()));
-    } catch (e) {
-      String error = "Not logged In";
-
-      AnimatedSnackBar.material(error,
-              type: AnimatedSnackBarType.error,
               mobileSnackBarPosition: MobileSnackBarPosition.bottom,
               desktopSnackBarPosition: DesktopSnackBarPosition.bottomLeft)
           .show(context);
