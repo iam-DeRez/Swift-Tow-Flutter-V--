@@ -100,8 +100,14 @@ class SignUpState extends State<SignUp> {
 //function for registering users using socials
   Future<void> googleSignUp() async {
     try {
-      final GoogleSignInAccount? googleSignInAccount =
-          await GoogleSignIn().signIn();
+      final GoogleSignInAccount? googleSignInAccount = await GoogleSignIn(
+        scopes: [
+          'email',
+          'profile',
+          'openid',
+          'https://www.googleapis.com/auth/user.phonenumbers.read'
+        ],
+      ).signIn();
 
       if (googleSignInAccount != null) {
         final GoogleSignInAuthentication googleSignInAuthentication =
@@ -115,9 +121,9 @@ class SignUpState extends State<SignUp> {
         User? user = userCredential.user;
 
         if (user != null) {
-          // Instantiate database reference
+          // Instantiate users database reference
           DatabaseReference newUserRef =
-              FirebaseDatabase.instance.reference().child('users');
+              FirebaseDatabase.instance.ref().child('users');
 
           String uid = user.uid;
           String name = user.displayName ?? '';
@@ -126,6 +132,7 @@ class SignUpState extends State<SignUp> {
 
           // Push user details to the database
           await newUserRef.child(uid).set({
+            'Id': uid,
             'Email': email,
             'Name': name,
             'Phone': phoneNumber,

@@ -2,10 +2,13 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 import 'package:dio/dio.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
@@ -22,11 +25,11 @@ class DirectionsMap extends StatefulWidget {
   const DirectionsMap({Key? key});
 
   @override
-  State<DirectionsMap> createState() => _DirectionsMapState();
+  State<DirectionsMap> createState() => DirectionsMapState();
   //google maps controller
 }
 
-class _DirectionsMapState extends State<DirectionsMap>
+class DirectionsMapState extends State<DirectionsMap>
     with TickerProviderStateMixin {
   //google maps controllers
   final Completer<GoogleMapController> _controller =
@@ -68,9 +71,9 @@ class _DirectionsMapState extends State<DirectionsMap>
   Set<Polyline> _polylines = Set<Polyline>();
 
 //fares
-  String towingPrice = '';
-  String distancePrice = '';
-  String totalPrice = '';
+  String? towingPrice;
+  String? distancePrice;
+  String? totalPrice;
 
   //method for displaying distance between points
   void priceEstimate() async {
@@ -120,10 +123,9 @@ class _DirectionsMapState extends State<DirectionsMap>
   @override
   void initState() {
     // TODO: implement initState
+    super.initState();
     locatePosition();
     priceEstimate();
-
-    super.initState();
   }
 
   @override
@@ -433,10 +435,10 @@ class ShowPayment extends StatefulWidget {
   const ShowPayment({super.key});
 
   @override
-  State<ShowPayment> createState() => _ShowPaymentState();
+  State<ShowPayment> createState() => ShowPaymentState();
 }
 
-class _ShowPaymentState extends State<ShowPayment> {
+class ShowPaymentState extends State<ShowPayment> {
 //visibility
   bool visibility = true;
 
@@ -477,6 +479,89 @@ class _ShowPaymentState extends State<ShowPayment> {
 
   //Custom Radio Buttons
   String _selectedPayment = 'cash';
+
+  //user_details
+  String userName = '';
+  String phoneNumber = '';
+
+  DatabaseReference requestingTow =
+      FirebaseDatabase.instance.ref().child('TowRequest');
+
+  //saving tow request in the database
+  Future<void> towRequest() async {
+    final user = FirebaseAuth.instance.currentUser!;
+    final userRef = FirebaseDatabase.instance.ref();
+
+    String uid = user.uid;
+
+    DatabaseEvent event = await userRef.child("users/$uid").once();
+    dynamic userData = event.snapshot.value;
+
+    if (userData != null) {
+      setState(() {
+        userName = userData['Name'].toString();
+        phoneNumber = userData['Phone'].toString();
+      });
+      print('userName : $userName');
+    }
+
+    //retrieving current location long/lat
+
+    DirectionsMapState retrieve = DirectionsMapState();
+
+    String pickLat = retrieve.currentPosition.latitude.toString();
+    String pickLong = retrieve.currentPosition.longitude.toString();
+    String dropLat = retrieve.dropOffLocation.latitude.toString();
+    String dropLong = retrieve.dropOffLocation.longitude.toString();
+    String currentAddress = MapScreenState.currentAddress;
+
+// Push user details to the database
+
+    //retrieving dropOff Address
+    double retrieveDropLat = retrieve.dropOffLocation.latitude;
+    double retrieveDropLong = retrieve.dropOffLocation.longitude;
+
+    List<Placemark> placemarks =
+        await placemarkFromCoordinates(retrieveDropLat, retrieveDropLong);
+    String locality = placemarks[0].locality!;
+    String subThoroughfare = placemarks[1].administrativeArea!;
+    String dropOffAddress = "$locality, $subThoroughfare";
+
+//TowRequestDetails
+    String createdAt = DateTime.now().toString();
+    String userN = userName;
+    String phoneN = phoneNumber;
+    String pickLatt = pickLat;
+    String pickongg = pickLong;
+    String dropLatt = dropLat;
+    String dropLongg = dropLong;
+
+    await requestingTow.child(uid).set({
+      'Date_created': createdAt,
+      'Name': userN,
+      'Phone': phoneN,
+      'Driver_id': 'waiting',
+      'Pickup_address': currentAddress,
+      'DropOff_address': dropOffAddress,
+      'Payment': 'cash'
+    });
+
+    await requestingTow.child('$uid/Location').set({
+      'Logitude': pickongg,
+      'Latitude': pickLatt,
+    });
+
+    await requestingTow.child('$uid/Destination').set({
+      'Logitude': dropLongg,
+      'Latitude': dropLatt,
+    });
+  }
+
+//Deleting tow request from the database
+  void cancelTowRequest() {
+    requestingTow.remove();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Visibility(
@@ -604,7 +689,9 @@ class _ShowPaymentState extends State<ShowPayment> {
                             child: Column(children: [
                           ElevatedButton(
                             onPressed: () {
+                              towRequest();
                               hideFairBottomSheet();
+
                               showModalBottomSheet(
                                   enableDrag: false,
                                   barrierColor: Colors.transparent,
@@ -762,7 +849,7 @@ class _showRequestBottomSheetState extends State<showRequestBottomSheet> {
                         child: Row(children: [
                           SvgPicture.asset(
                             "images/alert-circle2.svg",
-                            height: 35,
+                            height: 28,
                           ),
                           const SizedBox(width: 15),
                           const Flexible(
@@ -787,7 +874,14 @@ class _showRequestBottomSheetState extends State<showRequestBottomSheet> {
                       Container(
                           child: Column(children: [
                         ElevatedButton(
-                          onPressed: () {},
+                          onPressed: () {
+                            ShowPaymentState cancel = ShowPaymentState();
+                            cancel.cancelTowRequest();
+                            Navigator.pushReplacement(context,
+                                MaterialPageRoute(builder: (context) {
+                              return const MapScreen();
+                            }));
+                          },
                           style: ButtonStyle(
                             elevation: MaterialStateProperty.all(0),
                             shadowColor:

@@ -85,8 +85,14 @@ class _LoginState extends State<Login> {
 //google signin
   Future<void> googleSignIn() async {
     try {
-      final GoogleSignInAccount? googleSignInAccount =
-          await GoogleSignIn().signIn();
+      final GoogleSignInAccount? googleSignInAccount = await GoogleSignIn(
+        scopes: [
+          'email',
+          'profile',
+          'openid',
+          'https://www.googleapis.com/auth/user.phonenumbers.read'
+        ],
+      ).signIn();
 
       if (googleSignInAccount != null) {
         final GoogleSignInAuthentication googleSignInAuthentication =
