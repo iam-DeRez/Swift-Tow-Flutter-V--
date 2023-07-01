@@ -1,0 +1,33 @@
+ DirectionsMapState retrieve = DirectionsMapState();
+    double pickLat = retrieve.currentPosition.latitude;
+    double pickLong = retrieve.currentPosition.longitude;
+
+    Location userLocation = Location(latitude: pickLat, longitude: pickLong);
+    distanceValue;
+    Dio dio = Dio();
+    Response response = await dio.get(
+      "https://maps.googleapis.com/maps/api/distancematrix/json?origins=${userLocation.latitude},${userLocation.longitude}&destinations=$driverLatitude,$driverLongitude&key=$placeKey&mode=DRIVING&",
+    );
+
+    if (response.statusCode == 200) {
+      Map<String, dynamic> data = response.data;
+
+      if (data['status'] == 'OK') {
+        var elements = data['rows'][0]['elements'];
+
+        if (elements.isNotEmpty) {
+          // var distanceText = elements[0]['distance']['text'];
+          double distanceValue1 = elements[0]['distance']['value'];
+          distanceValue = distanceValue1;
+        }
+      }
+    }
+    return distanceValue;
+
+
+    final driversRef = FirebaseDatabase.instance.ref();
+    DatabaseEvent event = await driversRef.child("drivers").once();
+    dynamic driversData = event.snapshot.value;
+
+    DatabaseEvent event = await query.once();
+    dynamic driversData = event.snapshot.value;

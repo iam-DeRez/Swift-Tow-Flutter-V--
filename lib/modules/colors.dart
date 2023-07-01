@@ -16,3 +16,5 @@ const Color loading2 = Color(0xffBEBEBE);
 const Color danger2 = Color(0xffF45959);
 const Color alert2bg = Color(0xffD8E4F3);
 const Color alert2border = Color(0xff7CA4D5);
+const Color green = Color(0xff34A853);
+const Color gray100 = Color(0xffF6F6F6);

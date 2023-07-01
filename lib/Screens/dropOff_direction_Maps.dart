@@ -1,6 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
-import 'dart:math';
 import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -13,11 +11,14 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:swifttow/Screens/pickupLocation.dart';
-import 'package:swifttow/modules/MapBoundry.dart';
-import 'package:swifttow/modules/apiKeys.dart';
+import 'package:swifttow/assistance/push_notification.dart';
+
+import 'package:swifttow/modules/global_Variable.dart';
 import 'package:swifttow/modules/colors.dart';
 
+import '../modules/MapBoundry.dart';
 import 'Maps.dart';
+import 'accepted_tow_request.dart';
 import 'navDrawer.dart';
 
 class DirectionsMap extends StatefulWidget {
@@ -37,6 +38,7 @@ class DirectionsMapState extends State<DirectionsMap>
 
   GoogleMapController? mapController;
 
+//Latitude and Logitude for current location
   LatLng? currentLocation;
 
   //current location for main Maps
@@ -73,7 +75,7 @@ class DirectionsMapState extends State<DirectionsMap>
 //fares
   String? towingPrice;
   String? distancePrice;
-  String? totalPrice;
+  static String? totalTowFare;
 
   //method for displaying distance between points
   void priceEstimate() async {
@@ -113,7 +115,7 @@ class DirectionsMapState extends State<DirectionsMap>
 
             //total fee
             double totalFare = basefare + distanceFare + durationFare;
-            totalPrice = totalFare.toStringAsFixed(0).toString();
+            totalTowFare = totalFare.toStringAsFixed(0).toString();
           });
         }
       }
@@ -333,7 +335,7 @@ class DirectionsMapState extends State<DirectionsMap>
                                               fontSize: 16,
                                               fontWeight: FontWeight.bold),
                                         ),
-                                        Text("GHc $totalPrice",
+                                        Text("GHc $totalTowFare",
                                             style: const TextStyle(
                                                 fontSize: 16,
                                                 fontWeight: FontWeight.bold)),
@@ -449,6 +451,8 @@ class ShowPaymentState extends State<ShowPayment> {
     });
   }
 
+  static String? totalTowingfare;
+
 //Overiding back button
   Future<bool> _onWillPop() async {
     return (await showDialog(
@@ -483,6 +487,7 @@ class ShowPaymentState extends State<ShowPayment> {
   //user_details
   String userName = '';
   String phoneNumber = '';
+  String notificationToken = '';
 
   DatabaseReference requestingTow =
       FirebaseDatabase.instance.ref().child('TowRequest');
@@ -501,6 +506,7 @@ class ShowPaymentState extends State<ShowPayment> {
       setState(() {
         userName = userData['Name'].toString();
         phoneNumber = userData['Phone'].toString();
+        notificationToken = userData['token'].toString();
       });
       print('userName : $userName');
     }
@@ -514,6 +520,7 @@ class ShowPaymentState extends State<ShowPayment> {
     String dropLat = retrieve.dropOffLocation.latitude.toString();
     String dropLong = retrieve.dropOffLocation.longitude.toString();
     String currentAddress = MapScreenState.currentAddress;
+    String towingFare = DirectionsMapState.totalTowFare!;
 
 // Push user details to the database
 
@@ -526,6 +533,7 @@ class ShowPaymentState extends State<ShowPayment> {
     String locality = placemarks[0].locality!;
     String subThoroughfare = placemarks[1].administrativeArea!;
     String dropOffAddress = "$locality, $subThoroughfare";
+    AcceptedTowState.dropOffAddress = dropOffAddress;
 
 //TowRequestDetails
     String createdAt = DateTime.now().toString();
@@ -539,20 +547,23 @@ class ShowPaymentState extends State<ShowPayment> {
     await requestingTow.child(uid).set({
       'Date_created': createdAt,
       'Name': userN,
+      'RequestId': user.uid,
       'Phone': phoneN,
       'Driver_id': 'waiting',
       'Pickup_address': currentAddress,
       'DropOff_address': dropOffAddress,
-      'Payment': 'cash'
+      'Payment': 'cash',
+      'Fare': towingFare,
+      'Notification_Token': notificationToken,
     });
 
     await requestingTow.child('$uid/Location').set({
-      'Logitude': pickongg,
+      'Longitude': pickongg,
       'Latitude': pickLatt,
     });
 
     await requestingTow.child('$uid/Destination').set({
-      'Logitude': dropLongg,
+      'Longitude': dropLongg,
       'Latitude': dropLatt,
     });
   }
@@ -560,6 +571,13 @@ class ShowPaymentState extends State<ShowPayment> {
 //Deleting tow request from the database
   void cancelTowRequest() {
     requestingTow.remove();
+  }
+
+  //sending tow request notification to nearby driver
+  void pushingTowRequestToNearestTow() {
+    RideRequestNotifier requestNotifier = RideRequestNotifier();
+    requestNotifier.getNearestDriverToken();
+    requestNotifier.sendRideRequest();
   }
 
   @override
@@ -690,6 +708,7 @@ class ShowPaymentState extends State<ShowPayment> {
                           ElevatedButton(
                             onPressed: () {
                               towRequest();
+                              pushingTowRequestToNearestTow();
                               hideFairBottomSheet();
 
                               showModalBottomSheet(
@@ -750,6 +769,18 @@ class showRequestBottomSheet extends StatefulWidget {
 }
 
 class _showRequestBottomSheetState extends State<showRequestBottomSheet> {
+  void receiveAcceptanceRequestFromTowDrivers() {
+    RideRequestNotifier requestNotifier = RideRequestNotifier();
+    requestNotifier.initialize(context);
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    receiveAcceptanceRequestFromTowDrivers();
+  }
+
   //Overiding back button
   Future<bool> _onWillPop() async {
     return (await showDialog(

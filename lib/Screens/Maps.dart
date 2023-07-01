@@ -1,16 +1,22 @@
 import 'dart:async';
 
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_geofire/flutter_geofire.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:swifttow/Helpers/autocompletePrediction.dart';
 
 import 'package:swifttow/Screens/pickupLocation.dart';
+import 'package:swifttow/assistance/assistance_geofire.dart';
 
 import 'package:swifttow/modules/colors.dart';
 
+import '../assistance/AssistantMethods.dart';
 import 'navDrawer.dart';
 
 class MapScreen extends StatefulWidget {
@@ -21,27 +27,30 @@ class MapScreen extends StatefulWidget {
 }
 
 class MapScreenState extends State<MapScreen> {
+  //List of predictions
   List<AutocompletePredictions> placePrediction = [];
+
+  // textcontroller
+  var actualLocation = TextEditingController();
+  var dropOfflocation = TextEditingController();
 
   //google maps controller
   final Completer<GoogleMapController> _controller =
       Completer<GoogleMapController>();
-
   GoogleMapController? mapController;
 
+//variables for current location, address and latlng
   Position? currentPosition;
   static String currentAddress = "";
   static LatLng? latlngPosition;
 
-  @override
-  void initState() {
-    // TODO: implement initState
-    locatePosition();
+//waiting for drivers key to load up before firing - geofire on key entered
+  bool nearbyTowDriversKeyLoaded = false;
 
-    super.initState();
-  }
+  //markers
+  Set<Marker> markersSet = {};
 
-  //Current Location
+  //Current Location method
   Future locatePosition() async {
     await Geolocator.checkPermission();
 
@@ -63,14 +72,55 @@ class MapScreenState extends State<MapScreen> {
     setState(() {
       currentAddress = "$locality, $subThoroughfare";
     });
+
+    driversCallBack();
   }
 
-  // textcontroller
-  var actualLocation = TextEditingController();
-  var dropOfflocation = TextEditingController();
+  //custom markers for showing tow drivers
+  BitmapDescriptor? nearbyTowMarker;
+
+  //Creating custom markers for nearby tows
+  void createMarker() {
+    if (nearbyTowMarker == null) {
+      ImageConfiguration imageConfiguration =
+          createLocalImageConfiguration(context, size: const Size(2, 2));
+      BitmapDescriptor.fromAssetImage(
+              imageConfiguration, 'images/tow_marker.png')
+          .then((icon) {
+        nearbyTowMarker = icon;
+      });
+    }
+  }
+
+// Getting user's token
+  Future<String> getToken() async {
+    final FirebaseMessaging fcm = FirebaseMessaging.instance;
+    final user = FirebaseAuth.instance.currentUser!;
+
+    String? token = await fcm.getToken();
+    print("User Notification Token: $token");
+
+    DatabaseReference tokenRef =
+        FirebaseDatabase.instance.ref().child('users/${user.uid}/token');
+    tokenRef.set(token);
+
+    fcm.subscribeToTopic('all users');
+
+    return token!;
+  }
+
+  //init state
+  @override
+  void initState() {
+    // TODO: implement initState
+    locatePosition();
+    getToken();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
+    createMarker();
     return Scaffold(
         appBar: AppBar(
           backgroundColor: Colors.transparent,
@@ -86,6 +136,7 @@ class MapScreenState extends State<MapScreen> {
         body: Stack(children: [
           //maps
           GoogleMap(
+            markers: Set.from(markersSet),
             mapType: MapType.normal,
             myLocationEnabled: true,
             myLocationButtonEnabled: true,
@@ -302,5 +353,91 @@ class MapScreenState extends State<MapScreen> {
                   duration: const Duration(milliseconds: 1000),
                   curve: Curves.fastLinearToSlowEaseIn),
         ]));
+  }
+
+  void driversCallBack() {
+    Geofire.initialize('driversAvailable');
+
+    Geofire.queryAtLocation(
+            currentPosition!.latitude, currentPosition!.longitude, 20)!
+        .listen((map) {
+      if (map != null) {
+        var callBack = map['callBack'];
+
+        //latitude will be retrieved from map['latitude']
+        //longitude will be retrieved from map['longitude']
+
+        switch (callBack) {
+          case Geofire.onKeyEntered:
+            NearbyAvailableTowDriver nearbyAvailableTowDrivers =
+                NearbyAvailableTowDriver();
+            nearbyAvailableTowDrivers.key = map['key'];
+            nearbyAvailableTowDrivers.latitude = map['latitude'];
+            nearbyAvailableTowDrivers.longitude = map['longitude'];
+            GeoFireAssistance.nearbyAvailableTowDriverList
+                .add(nearbyAvailableTowDrivers);
+
+            if (nearbyTowDriversKeyLoaded) {
+              updateAvailableDriversOnMap();
+            }
+
+            break;
+
+          case Geofire.onKeyExited:
+            GeoFireAssistance.removeTowDriverFromList(map['key']);
+            updateAvailableDriversOnMap();
+            break;
+
+          case Geofire.onKeyMoved:
+            // Update your key's location
+
+            NearbyAvailableTowDriver nearbyAvailableTowDrivers =
+                NearbyAvailableTowDriver();
+            nearbyAvailableTowDrivers.key = map['key'];
+
+            nearbyAvailableTowDrivers.latitude = map['latitude'];
+
+            nearbyAvailableTowDrivers.longitude = map['longitude'];
+
+            GeoFireAssistance.updateTowDriversPostition(
+                nearbyAvailableTowDrivers);
+            updateAvailableDriversOnMap();
+            break;
+
+          case Geofire.onGeoQueryReady:
+            nearbyTowDriversKeyLoaded = true;
+            updateAvailableDriversOnMap();
+            break;
+        }
+      }
+
+      setState(() {});
+    });
+  }
+
+//updating available drivers on the map
+  void updateAvailableDriversOnMap() {
+    setState(() {
+      markersSet.clear();
+    });
+
+//custom markers for drivers
+    Set<Marker> tempMarkers = Set<Marker>();
+    for (NearbyAvailableTowDriver nearbyAvailableTowDriver
+        in GeoFireAssistance.nearbyAvailableTowDriverList) {
+      LatLng towDriverPosition = LatLng(nearbyAvailableTowDriver.latitude!,
+          nearbyAvailableTowDriver.longitude!);
+
+      Marker marker = Marker(
+          markerId: MarkerId("towDriver${nearbyAvailableTowDriver.key}"),
+          position: towDriverPosition,
+          icon: nearbyTowMarker!,
+          rotation: AssistantMethods.generateRandomNumber(360));
+
+      tempMarkers.add(marker);
+    }
+    setState(() {
+      markersSet = tempMarkers;
+    });
   }
 }
